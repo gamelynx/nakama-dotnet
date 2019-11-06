@@ -217,8 +217,16 @@ namespace Nakama
                     return new ArraySegment<byte>();
                 }
 
-                result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer, count, MaxMessageSize - count),
-                    CancellationToken.None).ConfigureAwait(false);
+                try
+                {
+                    result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer, count, MaxMessageSize - count),
+                        CancellationToken.None).ConfigureAwait(false);
+                } catch(SocketException)
+                {
+                    ReceivedError?.Invoke(new WebSocketException(WebSocketError.Faulted));
+                    return new ArraySegment<byte>();
+                }
+                
                 count += result.Count;
             }
 
